@@ -32,6 +32,55 @@ PORT=3000
 
 ---
 
+## Docker
+
+**Start all services (app + MongoDB):**
+
+```bash
+docker compose up --build
+```
+
+**Run in background:**
+
+```bash
+docker compose up --build -d
+```
+
+**Stop all services:**
+
+```bash
+docker compose down
+```
+
+**Stop and wipe MongoDB volume:**
+
+```bash
+docker compose down -v
+```
+
+**View logs:**
+
+```bash
+docker compose logs -f app    # app logs only
+docker compose logs -f mongo  # mongo logs only
+docker compose logs -f        # all logs
+```
+
+**Rebuild app only (after code changes):**
+
+```bash
+docker compose up --build app
+```
+
+**Run Makefile commands (no mongosh needed on host):**
+
+```bash
+make dump          # backup DB → ./backup
+make export-users  # export users collection → ./users.json
+```
+
+---
+
 ## Scripts
 
 | Command | Description |
@@ -116,6 +165,19 @@ Inserts an array of user objects in chunks of 500. Each entry is validated indiv
 { "message": "No valid entries found to insert", "skipped": 10 }
 ```
 
+**Example curl — mixed valid and invalid:**
+
+```bash
+curl --location 'http://52.66.250.131:3000/api/users/bulk-create' \
+--header 'Content-Type: application/json' \
+--data-raw '[
+  {"fullName":"User 0011","email":"u990@t.com","phone":"+919818314156","walletBalace":"not-a-number","deviceInfo":{"ipAddress":"1.1.1.70","deviceType":"Mobile","os":"Android"}},
+  {"fullName":"User 71","email":"u71999901@t.com","phone":"+919818314150","deviceInfo":{"ipAddress":"1.1.1.71","deviceType":"Desktop","os":"Windows"}}
+]'
+```
+
+> Entry 1 is skipped (`walletBalace` is a string). Entry 2 is inserted. Expected: `207` with `inserted: 1, skipped: 1`.
+
 ---
 
 ### Bulk Update Users
@@ -168,6 +230,16 @@ Filter priority: `email` is used first if present, otherwise `phone`.
 ```json
 // 207 example
 { "message": "Bulk update completed", "updated": 18, "skipped": 2 }
+```
+
+**Example curl:**
+
+```bash
+curl --location --request PUT 'http://52.66.250.131:3000/api/users/bulk-update' \
+--header 'Content-Type: application/json' \
+--data-raw '[
+  {"fullName":"User 71","email":"u71@t.com","phone":"+916000000071","walletBalace":175,"isBlocked":true,"kycStatus":"Pending","deviceInfo":{"ipAddress":"1.1.1.71","deviceType":"Desktop","os":"Windows"}}
+]'
 ```
 
 ---

@@ -2,9 +2,14 @@ include .env
 export
 
 dump:
-	mongodump --uri="$(MONGO_URI)" --out=backup/
+	docker compose exec mongo mongodump \
+		--uri="mongodb://localhost:27017/users" \
+		--out=/data/backup
+	docker compose cp mongo:/data/backup ./backup
 
 export-users:
-	mongoexport --uri="$(MONGO_URI)" \
+	docker compose exec mongo mongoexport \
+		--uri="mongodb://localhost:27017/users" \
 		--collection=users \
-		--out=users.json
+		--out=/data/users.json
+	docker compose cp mongo:/data/users.json ./users.json
